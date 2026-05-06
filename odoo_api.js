@@ -158,20 +158,31 @@ class OdooAPI {
 
     async createPartner(contact) {
         await this.ensureInitialized();
-        const vals = {
+        
+        // 1. Fetch default values from Odoo for res.partner
+        // We fetch common fields that usually have defaults
+        const defaultFields = ['user_id', 'company_id', 'team_id', 'type', 'lang', 'country_id'];
+        const defaults = await this.call('res.partner', 'default_get', [defaultFields]);
+
+        // 2. Prepare LinkedIn values
+        const linkedinVals = {
             function: contact.position,
             comment: contact.company ? `Entreprise LinkedIn: ${contact.company}` : "",
-            is_company: false
+            is_company: false,
+            user_id: this.uid // Force current user as salesperson if not set otherwise
         };
-        vals[this.linkedInField] = contact.profileUrl;
+        linkedinVals[this.linkedInField] = contact.profileUrl;
 
         if (this.hasFirstName) {
-            vals.first_name = contact.firstName;
-            vals.name = contact.lastName || contact.firstName;
+            linkedinVals.first_name = contact.firstName;
+            linkedinVals.name = contact.lastName || contact.firstName;
         } else {
-            vals.name = contact.name;
+            linkedinVals.name = contact.name;
         }
 
-        return await this.call('res.partner', 'create', [vals]);
+        // 3. Merge defaults with LinkedIn values (LinkedIn takes priority)
+        const finalVals = Object.assign({}, defaults, linkedinVals);
+
+        return await this.call('res.partner', 'create', [finalVals]);
     }
 }
