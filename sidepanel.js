@@ -16,12 +16,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const scanBtn = document.getElementById('scan-btn');
     const contactsList = document.getElementById('contacts-list');
     const statusMsg = document.getElementById('status-msg');
-    const hideExistsCheck = document.getElementById('hide-exists');
+    const debugOutput = document.getElementById('debug-output');
+    const toggleDebug = document.getElementById('toggle-debug');
 
     // Initial State Check
-    const config = await chrome.storage.local.get(['url', 'db', 'username', 'password', 'authMode', 'hideExists']);
-    if (config.hideExists !== undefined) hideExistsCheck.checked = config.hideExists;
-    
+    const config = await chrome.storage.local.get(['url', 'db', 'username', 'password', 'authMode']);
     if (config.url) {
         tryAutoConnect(config);
     } else {
@@ -37,8 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showView('main');
             } else {
                 showView('setup');
-                const setupUrlInput = document.getElementById('setup-url');
-                if (setupUrlInput) setupUrlInput.value = cfg.url || '';
+                document.getElementById('setup-url').value = cfg.url || '';
             }
         });
     }
@@ -70,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('setup-connect').addEventListener('click', async () => {
         let url = document.getElementById('setup-url').value;
         url = cleanUrl(url);
+        
         if (!url) return alert("Please enter your Odoo URL.");
 
         chrome.runtime.sendMessage({
@@ -104,51 +103,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     settingsToggle.addEventListener('click', () => showView('setup'));
 
-    hideExistsCheck.addEventListener('change', async () => {
-        await chrome.storage.local.set({ hideExists: hideExistsCheck.checked });
-        applyFilters();
-    });
-
-    function applyFilters() {
-        const hide = hideExistsCheck.checked;
-        const cards = document.querySelectorAll('.contact-card');
-        cards.forEach(card => {
-            const isExisting = card.hasAttribute('data-exists');
-            if (hide && isExisting) {
-                card.classList.add('hidden');
-            } else {
-                card.classList.remove('hidden');
-            }
-        });
-    }
-
     async function redirectToLinkedIn() {
-        const targetUrl = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
-        if (tab && tab.url && tab.url.startsWith('http')) {
-            if (!tab.url.includes("linkedin.com/mynetwork/invite-connect/connections")) {
-                chrome.tabs.update(tab.id, { url: targetUrl });
-            }
-        } else {
-            // If on a restricted page (like chrome://) or no tab, create new
-            chrome.tabs.create({ url: targetUrl });
+        const targetUrl = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
+        if (tab && !tab.url.includes("linkedin.com/mynetwork/invite-connect/connections")) {
+            chrome.tabs.update(tab.id, { url: targetUrl });
         }
     }
 
     // Scan Logic
     scanBtn.addEventListener('click', async () => {
         if (scanBtn.disabled) return;
+        
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         
-        if (!tab || !tab.url || !tab.url.includes("linkedin.com/mynetwork/invite-connect/connections")) {
-            if (statusMsg) statusMsg.innerHTML = chrome.i18n.getMessage("navigateHint");
+        if (!tab || !tab.url.includes("linkedin.com/mynetwork/invite-connect/connections")) {
+            statusMsg.innerHTML = chrome.i18n.getMessage("navigateHint");
             return;
         }
 
         scanBtn.disabled = true;
         scanBtn.style.opacity = '0.5';
-        if (statusMsg) statusMsg.innerText = chrome.i18n.getMessage("scanning");
+        statusMsg.innerText = chrome.i18n.getMessage("scanning");
 
         chrome.tabs.sendMessage(tab.id, { action: "parse_connections" }, async (response) => {
             setTimeout(() => { 
@@ -157,12 +133,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 3000);
 
             if (chrome.runtime.lastError || !response) {
-                if (statusMsg) statusMsg.innerText = chrome.i18n.getMessage("loadError");
+                statusMsg.innerText = chrome.i18n.getMessage("loadError");
                 return;
             }
-            await renderContactsSequentially(response.contacts);
-            if (statusMsg) statusMsg.innerText = chrome.i18n.getMessage("foundContacts", [response.contacts.length.toString()]);
+            
+            // Debug Output
+            if (debugOutput) {
+                debugOutput.innerText = `Raw Links Found: ${response.debugCount || 0}\n` + 
+                                     `Contacts Parsed: ${response.contacts ? response.contacts.length : 0}\n` +
+                                     `JSON:\n${JSON.stringify(response.contacts, null, 2)}`;
+            }
+
+            if (response.contacts) {
+                await renderContactsSequentially(response.contacts);
+                statusMsg.innerText = chrome.i18n.getMessage("foundContacts", [response.contacts.length.toString()]);
+            }
         });
+    });
+
+    toggleDebug.addEventListener('click', () => {
+        debugOutput.classList.toggle('hidden');
+        const isHidden = debugOutput.classList.contains('hidden');
+        toggleDebug.innerText = chrome.i18n.getMessage(isHidden ? "showDebug" : "hideDebug");
     });
 
     function getSafeId(str) {
@@ -179,27 +171,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         const contactData = [];
         for (const contact of contacts) {
             const cardId = getSafeId(contact.profileUrl);
+            const imgId = `img-${cardId}`;
             const card = document.createElement('div');
             card.className = 'contact-card';
-            card.id = `card-${cardId}`; 
             card.innerHTML = `
-                <img src="${contact.imageUrl || ''}" class="contact-img" alt="">
+                <div class="contact-img-container">
+                    <img id="${imgId}" src="" class="contact-img hidden" alt="">
+                    <div id="placeholder-${imgId}" class="contact-img placeholder"></div>
+                </div>
                 <div class="contact-info">
                     <p class="contact-name">${contact.name}</p>
-                    <p class="contact-headline">${contact.headline}</p>
+                    <p class="contact-position">${contact.position || ''}</p>
+                    <p class="contact-company">${contact.company || ''}</p>
                     <div class="contact-actions" id="${cardId}">
                         <span class="loading-text">${chrome.i18n.getMessage("checkingOdoo")}</span>
                     </div>
                 </div>
             `;
             contactsList.appendChild(card);
-            contactData.push({ contact, cardId });
+            contactData.push({ contact, cardId, imgId });
+            
+            // Fetch image in background to bypass CSP
+            if (contact.imageUrl) {
+                chrome.runtime.sendMessage({ action: "fetch_image", url: contact.imageUrl }, (res) => {
+                    const imgEl = document.getElementById(imgId);
+                    const placeholder = document.getElementById(`placeholder-${imgId}`);
+                    if (res && res.data && imgEl) {
+                        imgEl.src = res.data;
+                        imgEl.classList.remove('hidden');
+                        if (placeholder) placeholder.classList.add('hidden');
+                    }
+                });
+            }
         }
 
         const config = await chrome.storage.local.get(['url', 'db', 'username', 'password']);
         for (const item of contactData) {
-            await checkContact(item.contact, item.cardId, config);
-            await new Promise(r => setTimeout(r, 50));
+            try {
+                await checkContact(item.contact, item.cardId, config);
+            } catch (e) {
+                console.error("Sequence Error:", e);
+            }
+            await new Promise(r => setTimeout(r, 100));
         }
     }
 
@@ -207,22 +220,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage({
                 action: "odoo_call",
-                params: { config, method: "find_best_match", data: contact }
+                params: { config, method: "check_contact", data: { profileUrl: contact.profileUrl } }
             }, (response) => {
                 const container = document.getElementById(containerId);
-                const card = document.getElementById(`card-${containerId}`);
-                if (container && card) {
+                if (container) {
                     container.innerHTML = '';
-                    if (response && response.status === 'certain') {
-                        card.setAttribute('data-exists', 'true');
-                        container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("exists", [response.partner.id.toString()])}</span>`;
-                        if (hideExistsCheck.checked) card.classList.add('hidden');
-                    } else if (response && (response.status === 'potential' || response.status === 'likely')) {
-                        const matchBtn = document.createElement('button');
-                        matchBtn.className = `action-btn potential ${response.status}`;
-                        matchBtn.innerText = chrome.i18n.getMessage("potentialMatch", [response.partner.id.toString()]);
-                        matchBtn.onclick = () => confirmLinkContact(contact, response.partner, containerId);
-                        container.appendChild(matchBtn);
+                    if (response && response.id) {
+                        container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("exists", [response.id.toString()])}</span>`;
                     } else {
                         const addBtn = document.createElement('button');
                         addBtn.className = 'action-btn add';
@@ -236,31 +240,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    async function confirmLinkContact(contact, partner, containerId) {
-        const confirmed = confirm(`${chrome.i18n.getMessage("isThisThem")}\n\n${partner.name}\n${partner.function || ""}`);
-        if (!confirmed) return;
-
-        const config = await chrome.storage.local.get(['url', 'db', 'username', 'password']);
-        const container = document.getElementById(containerId);
-        const card = document.getElementById(`card-${containerId}`);
-        if (container) container.innerHTML = `<span>...</span>`;
-
-        chrome.runtime.sendMessage({
-            action: "odoo_call",
-            params: { config, method: "update_partner_linkedin", data: { partnerId: partner.id, profileUrl: contact.profileUrl } }
-        }, (response) => {
-            if (response) {
-                if (card) card.setAttribute('data-exists', 'true');
-                if (container) container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("linked")}</span>`;
-                if (hideExistsCheck.checked) setTimeout(() => { if (card) card.classList.add('hidden'); }, 1000);
-            }
-        });
-    }
-
     async function addContactToOdoo(contact, containerId) {
         const config = await chrome.storage.local.get(['url', 'db', 'username', 'password']);
         const container = document.getElementById(containerId);
-        const card = document.getElementById(`card-${containerId}`);
         if (!container) return;
         
         container.innerHTML = `<span>${chrome.i18n.getMessage("adding")}</span>`;
@@ -273,11 +255,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!currentContainer) return;
 
             if (response && (response > 0 || response.id)) {
-                if (card) card.setAttribute('data-exists', 'true');
                 currentContainer.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("added")}</span>`;
-                if (hideExistsCheck.checked) setTimeout(() => { if (card) card.classList.add('hidden'); }, 1000);
             } else {
-                currentContainer.innerHTML = `<span class="error-text">${chrome.i18n.getMessage("error")}</span>`;
+                container.innerHTML = `<span class="error-text">${chrome.i18n.getMessage("error")}</span>`;
             }
         });
     }

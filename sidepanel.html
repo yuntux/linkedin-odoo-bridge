@@ -29,7 +29,7 @@
             <button id="show-manual" class="text-link">Manual Password Configuration</button>
         </section>
 
-        <!-- Manual Password Config (Hidden by default) -->
+        <!-- Manual Password Config -->
         <section id="manual-view" class="view hidden">
             <h3 data-i18n="tabPassword">Password/API</h3>
             <div class="form-group">
@@ -52,15 +52,9 @@
             <button id="back-to-setup" class="text-link">Back</button>
         </section>
 
-        <!-- Main View (Scan Button & Results) -->
+        <!-- Main View -->
         <section id="main-view" class="view hidden">
             <div class="actions">
-                <div class="filter-group">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="hide-exists">
-                        <span data-i18n="hideExists">Hide contacts already in Odoo</span>
-                    </label>
-                </div>
                 <button id="scan-btn" class="primary-btn" data-i18n="scanBtn">Scan LinkedIn Page</button>
             </div>
             
@@ -68,6 +62,12 @@
 
             <div id="contacts-list" class="list-container">
                 <div class="empty-state" data-i18n="noContacts">No contacts found yet.</div>
+            </div>
+
+            <!-- Debug Section (Back at the bottom) -->
+            <div class="debug-section">
+                <button id="toggle-debug" class="text-link" data-i18n="showDebug">Show Raw JSON Debug</button>
+                <pre id="debug-output" class="hidden"></pre>
             </div>
         </section>
     </div>

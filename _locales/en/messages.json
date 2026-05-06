@@ -1,4 +1,6 @@
 {
+  "showDebug": { "message": "Show Raw JSON Debug" },
+  "hideDebug": { "message": "Hide Raw JSON Debug" },
   "extensionName": { "message": "LinkedIn to Odoo Connector" },
   "extensionDescription": { "message": "Add LinkedIn contacts directly to Odoo 18 CE." },
   "sidebarTitle": { "message": "Odoo 18 Connector" },
