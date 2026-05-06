@@ -1,4 +1,9 @@
 {
+  "certainMatch": { "message": "Already linked" },
+  "likelyMatch": { "message": "Likely $NAME$" },
+  "potentialMatch": { "message": "Potential match ($NAME$)" },
+  "linkBtn": { "message": "Link to Odoo" },
+  "createAnywayBtn": { "message": "Create New" },
   "showDebug": { "message": "Show Raw JSON Debug" },
   "hideDebug": { "message": "Hide Raw JSON Debug" },
   "extensionName": { "message": "LinkedIn to Odoo Connector" },

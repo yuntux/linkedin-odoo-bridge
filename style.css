@@ -67,6 +67,18 @@ input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border
 .action-btn { font-size: 0.7rem; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); font-weight: 500; }
 .action-btn.add { background: var(--secondary); color: white; border: none; }
 .action-btn.exists { background: #f1f8e9; color: #33691e; border-color: #dcedc8; }
+
+/* Match UI */
+.match-box { background: #fffde7; border: 1px solid #fff59d; border-radius: 8px; padding: 8px; margin-top: 5px; width: 100%; }
+.match-box.likely { background: #e3f2fd; border-color: #bbdefb; }
+.match-box.potential { background: #fff3e0; border-color: #ffe0b2; }
+
+.match-status { font-size: 0.7rem; font-weight: 600; margin: 0 0 5px 0; color: #555; }
+.match-actions { display: flex; gap: 5px; }
+
+.action-btn.link { background: #4caf50; color: white; border: none; flex: 1; font-size: 0.65rem; }
+.action-btn.add-anyway { background: white; color: #666; border: 1px solid #ccc; flex: 1; font-size: 0.65rem; }
+
 .error-text { color: #c62828; font-size: 0.7rem; }
 .empty-state { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.85rem; }
 

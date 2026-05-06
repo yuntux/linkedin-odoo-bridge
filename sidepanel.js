@@ -220,13 +220,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage({
                 action: "odoo_call",
-                params: { config, method: "check_contact", data: { profileUrl: contact.profileUrl } }
+                params: { config, method: "find_best_match", data: contact }
             }, (response) => {
                 const container = document.getElementById(containerId);
                 if (container) {
                     container.innerHTML = '';
-                    if (response && response.id) {
-                        container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("exists", [response.id.toString()])}</span>`;
+                    if (response && response.status === 'certain') {
+                        container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("certainMatch")}</span>`;
+                    } else if (response && (response.status === 'likely' || response.status === 'potential')) {
+                        const statusClass = response.status;
+                        const partnerName = response.partner.name;
+                        const msgKey = response.status === 'likely' ? "likelyMatch" : "potentialMatch";
+                        
+                        container.innerHTML = `
+                            <div class="match-box ${statusClass}">
+                                <p class="match-status">${chrome.i18n.getMessage(msgKey, [partnerName])}</p>
+                                <div class="match-actions">
+                                    <button class="action-btn link" id="link-${containerId}">${chrome.i18n.getMessage("linkBtn")}</button>
+                                    <button class="action-btn add-anyway" id="add-${containerId}">${chrome.i18n.getMessage("createAnywayBtn")}</button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        document.getElementById(`link-${containerId}`).onclick = () => linkContactToOdoo(response.partner.id, contact.profileUrl, containerId);
+                        document.getElementById(`add-${containerId}`).onclick = () => addContactToOdoo(contact, containerId);
                     } else {
                         const addBtn = document.createElement('button');
                         addBtn.className = 'action-btn add';
@@ -237,6 +254,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 resolve();
             });
+        });
+    }
+
+    async function linkContactToOdoo(partnerId, profileUrl, containerId) {
+        const config = await chrome.storage.local.get(['url', 'db', 'username', 'password']);
+        const container = document.getElementById(containerId);
+        if (container) container.innerHTML = `<span>${chrome.i18n.getMessage("adding")}</span>`;
+
+        chrome.runtime.sendMessage({
+            action: "odoo_call",
+            params: { config, method: "link_partner", data: { partnerId, profileUrl } }
+        }, (response) => {
+            const currentContainer = document.getElementById(containerId);
+            if (currentContainer) {
+                currentContainer.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("added")}</span>`;
+            }
         });
     }
 
@@ -257,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response && (response > 0 || response.id)) {
                 currentContainer.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("added")}</span>`;
             } else {
-                container.innerHTML = `<span class="error-text">${chrome.i18n.getMessage("error")}</span>`;
+                currentContainer.innerHTML = `<span class="error-text">${chrome.i18n.getMessage("error")}</span>`;
             }
         });
     }

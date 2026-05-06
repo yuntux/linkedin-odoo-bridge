@@ -10,14 +10,15 @@ class OdooAPI {
         this.uid = null;
         this.csrfToken = null;
         this.isSessionMode = !password;
-        this.linkedInField = 'website'; 
-        this.isInitializing = false; // Guard to prevent infinite recursion
+        this.linkedInField = 'website';
+        this.hasFirstName = false;
+        this.isInitializing = false;
     }
 
     async initSession() {
         if (this.isInitializing) return;
         this.isInitializing = true;
-        
+
         try {
             const response = await fetch(`${this.url}/web/session/modules`, { method: 'GET' });
             const cookies = document.cookie;
@@ -28,11 +29,9 @@ class OdooAPI {
             if (sessionInfo && sessionInfo.uid) {
                 this.uid = sessionInfo.uid;
                 this.db = sessionInfo.db;
-                
-                // Important: detectLinkedInField calls 'call', 
-                // but since isInitializing is true, it won't loop back here.
-                await this.detectLinkedInField();
-                
+
+                await this.detectPartnerFields();
+
                 return { uid: this.uid, db: this.db };
             }
         } catch (e) {
@@ -43,15 +42,21 @@ class OdooAPI {
         return null;
     }
 
-    async detectLinkedInField() {
+    async detectPartnerFields() {
         try {
-            // Use a direct fetch or ensure this doesn't trigger recursion
-            const fields = await this.call('res.partner', 'fields_get', [['linkedin_url'], ['string']]);
+            // Detect all special fields in one go to minimize RPC calls
+            const fields = await this.call('res.partner', 'fields_get', [['linkedin_url', 'first_name'], ['string']]);
+
             if (fields && fields.linkedin_url) {
                 this.linkedInField = 'linkedin_url';
+            } else {
+                this.linkedInField = 'website';
             }
+
+            this.hasFirstName = !!(fields && fields.first_name);
         } catch (e) {
             this.linkedInField = 'website';
+            this.hasFirstName = false;
         }
     }
 
@@ -66,7 +71,6 @@ class OdooAPI {
     }
 
     async call(model, method, args, kwargs = {}) {
-        // Only trigger initSession if not already initializing and no token
         if (this.isSessionMode && !this.csrfToken && !this.isInitializing) {
             await this.initSession();
         }
@@ -75,10 +79,7 @@ class OdooAPI {
             jsonrpc: "2.0",
             method: "call",
             params: {
-                model,
-                method,
-                args,
-                kwargs,
+                model, method, args, kwargs,
                 context: { "lang": "fr_FR" }
             },
             id: Math.floor(Math.random() * 1000)
@@ -100,28 +101,43 @@ class OdooAPI {
     }
 
     async findBestMatch(contact) {
+        // Ensure fields are detected if not already done
+        if (this.linkedInField === 'website' && !this.isInitializing && this.uid) {
+            // Optional: lazy re-check if needed, but initSession handles it
+        }
+
+        // Level 1: Certain Match by URL
         const certain = await this.call('res.partner', 'search_read', [
             [[this.linkedInField, '=', contact.profileUrl]],
             ['id', 'name']
         ]);
         if (certain.length > 0) return { status: 'certain', partner: certain[0] };
 
+        // Level 2: Likely/Potential Match by Name components
+        let domain = [['is_company', '=', false]];
+        if (this.hasFirstName) {
+            domain.push(['first_name', 'ilike', contact.firstName]);
+            domain.push(['name', 'ilike', contact.lastName]);
+        } else {
+            domain.push(['name', 'ilike', contact.name]);
+        }
+
         const potential = await this.call('res.partner', 'search_read', [
-            [['name', 'ilike', contact.name], ['is_company', '=', false]],
+            domain,
             ['id', 'name', 'function', 'parent_id']
         ]);
-        
+
         if (potential.length > 0) {
             const match = potential[0];
             const odooCompanyName = match.parent_id ? match.parent_id[1] : "";
-            if (contact.companyName && odooCompanyName && 
-                (odooCompanyName.toLowerCase().includes(contact.companyName.toLowerCase()) || 
-                 contact.companyName.toLowerCase().includes(odooCompanyName.toLowerCase()))) {
-                return { status: 'likely', partner: match };
-            }
-            return { status: 'potential', partner: match };
+            const isLikely = contact.company && odooCompanyName &&
+                (odooCompanyName.toLowerCase().includes(contact.company.toLowerCase()) ||
+                    contact.company.toLowerCase().includes(odooCompanyName.toLowerCase()));
+
+            return { status: isLikely ? 'likely' : 'potential', partner: match };
         }
-        return null;
+
+        return { status: 'none' };
     }
 
     async findPartnerByProfile(profileUrl) {
@@ -132,14 +148,13 @@ class OdooAPI {
         return partners.length > 0 ? partners[0] : null;
     }
 
-    async createPartner(contact) {
-        // Check if 'first_name' field exists on the server
-        let hasFirstName = false;
-        try {
-            const fields = await this.call('res.partner', 'fields_get', [['first_name']]);
-            hasFirstName = !!(fields && fields.first_name);
-        } catch (e) { /* field doesn't exist */ }
+    async linkPartner(partnerId, profileUrl) {
+        const vals = {};
+        vals[this.linkedInField] = profileUrl;
+        return await this.call('res.partner', 'write', [[partnerId], vals]);
+    }
 
+    async createPartner(contact) {
         const vals = {
             function: contact.position,
             comment: contact.company ? `Entreprise LinkedIn: ${contact.company}` : "",
@@ -147,7 +162,7 @@ class OdooAPI {
         };
         vals[this.linkedInField] = contact.profileUrl;
 
-        if (hasFirstName && contact.firstName) {
+        if (this.hasFirstName) {
             vals.first_name = contact.firstName;
             vals.name = contact.lastName || contact.firstName;
         } else {

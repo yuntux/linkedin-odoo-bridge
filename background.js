@@ -43,8 +43,10 @@ async function handleOdooCall(params) {
         switch (method) {
             case 'init_session':
                 return await api.initSession();
-            case 'check_contact':
-                return await api.findPartnerByProfile(data.profileUrl);
+            case 'find_best_match':
+                return await api.findBestMatch(data);
+            case 'link_partner':
+                return await api.linkPartner(data.partnerId, data.profileUrl);
             case 'add_contact':
                 return await api.createPartner(data);
             default:
