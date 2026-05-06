@@ -75,7 +75,10 @@ input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border
 .match-row:last-child { border-bottom: none; }
 .match-row.likely { background: #e3f2fd; }
 
-.match-status { font-size: 0.65rem; font-weight: 600; margin: 0; color: #555; flex: 1; }
+.match-info-text { flex: 1; min-width: 0; }
+.match-status { font-size: 0.65rem; font-weight: 600; margin: 0; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.odoo-link { font-size: 0.6rem; color: var(--secondary); text-decoration: none; font-weight: 500; }
+.odoo-link:hover { text-decoration: underline; }
 .match-footer { padding: 6px; border-top: 1px dashed #ccc; margin-top: 4px; text-align: center; }
 
 .action-btn.link.small { padding: 3px 6px; font-size: 0.6rem; min-width: 65px; }

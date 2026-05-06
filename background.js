@@ -43,6 +43,9 @@ async function handleOdooCall(params) {
         switch (method) {
             case 'init_session':
                 return await api.initSession();
+            case 'get_config':
+                if (!api.uid) await api.initSession();
+                return { linkedInField: api.linkedInField, hasFirstName: api.hasFirstName };
             case 'find_best_match':
                 return await api.findBestMatch(data);
             case 'link_partner':

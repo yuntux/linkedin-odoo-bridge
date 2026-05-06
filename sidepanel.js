@@ -137,12 +137,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             
-            // Debug Output
-            if (debugOutput) {
-                debugOutput.innerText = `Raw Links Found: ${response.debugCount || 0}\n` + 
-                                     `Contacts Parsed: ${response.contacts ? response.contacts.length : 0}\n` +
-                                     `JSON:\n${JSON.stringify(response.contacts, null, 2)}`;
-            }
+            // Fetch Odoo Config for Debug
+            const config = await chrome.storage.local.get(['url', 'db', 'username', 'password']);
+            chrome.runtime.sendMessage({ action: "odoo_call", params: { config, method: "get_config" } }, (odooCfg) => {
+                if (debugOutput) {
+                    debugOutput.innerText = `--- ODOO CONFIG ---\n` +
+                                         `LinkedIn Field: ${odooCfg?.linkedInField || 'unknown'}\n` +
+                                         `Has First Name: ${odooCfg?.hasFirstName || 'false'}\n\n` +
+                                         `--- SCAN STATS ---\n` +
+                                         `Raw Links Found: ${response.debugCount || 0}\n` + 
+                                         `Contacts Parsed: ${response.contacts ? response.contacts.length : 0}\n` +
+                                         `JSON:\n${JSON.stringify(response.contacts, null, 2)}`;
+                }
+            });
 
             if (response.contacts) {
                 await renderContactsSequentially(response.contacts);
@@ -229,15 +236,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                         container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("certainMatch")}</span>`;
                     } else if (response && response.status === 'multi') {
                         let matchesHtml = '';
+                        const odooUrl = config.url;
                         response.matches.forEach((m, idx) => {
                             const partnerName = m.partner.name;
                             const companyName = m.partner.parent_id ? ` (${m.partner.parent_id[1]})` : "";
                             const msgKey = m.status === 'likely' ? "likelyMatch" : "potentialMatch";
                             const btnId = `link-${containerId}-${idx}`;
+                            const partnerUrl = `${odooUrl}/web#id=${m.partner.id}&model=res.partner&view_type=form`;
                             
                             matchesHtml += `
                                 <div class="match-row ${m.status}">
-                                    <p class="match-status">${chrome.i18n.getMessage(msgKey, [partnerName])}${companyName}</p>
+                                    <div class="match-info-text">
+                                        <p class="match-status">${chrome.i18n.getMessage(msgKey, [partnerName])}${companyName}</p>
+                                        <a href="${partnerUrl}" target="_blank" class="odoo-link">Voir dans Odoo ↗</a>
+                                    </div>
                                     <button class="action-btn link small" id="${btnId}">${chrome.i18n.getMessage("linkBtn")}</button>
                                 </div>
                             `;

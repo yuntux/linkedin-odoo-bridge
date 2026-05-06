@@ -18,20 +18,26 @@ class OdooAPI {
     async initSession() {
         if (this.isInitializing) return;
         this.isInitializing = true;
-
+        
         try {
-            const response = await fetch(`${this.url}/web/session/modules`, { method: 'GET' });
-            const cookies = document.cookie;
-            const csrfMatch = cookies.match(/csrf_token=([^;]+)/);
-            if (csrfMatch) this.csrfToken = csrfMatch[1];
+            if (this.isSessionMode) {
+                const response = await fetch(`${this.url}/web/session/modules`, { method: 'GET' });
+                const cookies = document.cookie;
+                const csrfMatch = cookies.match(/csrf_token=([^;]+)/);
+                if (csrfMatch) this.csrfToken = csrfMatch[1];
 
-            const sessionInfo = await this.callWeb('/web/session/get_session_info', {});
-            if (sessionInfo && sessionInfo.uid) {
-                this.uid = sessionInfo.uid;
-                this.db = sessionInfo.db;
+                const sessionInfo = await this.callWeb('/web/session/get_session_info', {});
+                if (sessionInfo && sessionInfo.uid) {
+                    this.uid = sessionInfo.uid;
+                    this.db = sessionInfo.db;
+                }
+            } else {
+                const res = await this.call('common', 'login', [this.db, this.username, this.password]);
+                if (res) this.uid = res;
+            }
 
+            if (this.uid) {
                 await this.detectPartnerFields();
-
                 return { uid: this.uid, db: this.db };
             }
         } catch (e) {
@@ -43,21 +49,21 @@ class OdooAPI {
     }
 
     async detectPartnerFields() {
+        console.log("Odoo Connector: Detecting partner fields...");
         try {
-            // Detect all special fields in one go to minimize RPC calls
-            const fields = await this.call('res.partner', 'fields_get', [['linkedin_url', 'first_name'], ['string']]);
-
-            if (fields && fields.linkedin_url) {
-                this.linkedInField = 'linkedin_url';
-            } else {
-                this.linkedInField = 'website';
-            }
-
-            this.hasFirstName = !!(fields && fields.first_name);
+            const liFields = await this.call('res.partner', 'fields_get', [['linkedin_url'], ['type']]);
+            this.linkedInField = (liFields && liFields.linkedin_url) ? 'linkedin_url' : 'website';
         } catch (e) {
             this.linkedInField = 'website';
+        }
+
+        try {
+            const fnFields = await this.call('res.partner', 'fields_get', [['first_name'], ['type']]);
+            this.hasFirstName = !!(fnFields && fnFields.first_name);
+        } catch (e) {
             this.hasFirstName = false;
         }
+        console.log(`Odoo Connector: Final Config -> linkedin_field: ${this.linkedInField}, has_first_name: ${this.hasFirstName}`);
     }
 
     async callWeb(route, params) {
@@ -71,7 +77,7 @@ class OdooAPI {
     }
 
     async call(model, method, args, kwargs = {}) {
-        if (this.isSessionMode && !this.csrfToken && !this.isInitializing) {
+        if (!this.uid && !this.isInitializing) {
             await this.initSession();
         }
 
@@ -100,20 +106,21 @@ class OdooAPI {
         return res.result;
     }
 
-    async findBestMatch(contact) {
-        // Ensure fields are detected if not already done
-        if (this.linkedInField === 'website' && !this.isInitializing && this.uid) {
-            // Optional: lazy re-check if needed, but initSession handles it
+    async ensureInitialized() {
+        if (!this.uid && !this.isInitializing) {
+            await this.initSession();
         }
+    }
 
-        // Level 1: Certain Match by URL
+    async findBestMatch(contact) {
+        await this.ensureInitialized();
+
         const certain = await this.call('res.partner', 'search_read', [
             [[this.linkedInField, '=', contact.profileUrl]],
             ['id', 'name']
         ]);
         if (certain.length > 0) return { status: 'certain', partner: certain[0] };
 
-        // Level 2: Likely/Potential Match by Name components
         let domain = [['is_company', '=', false]];
         if (this.hasFirstName) {
             domain.push(['first_name', 'ilike', contact.firstName]);
@@ -128,43 +135,28 @@ class OdooAPI {
         ]);
 
         if (potential.length > 0) {
-            // Process each match to see if it's 'likely' or just 'potential'
             const matches = potential.map(p => {
                 const odooCompanyName = p.parent_id ? p.parent_id[1] : "";
                 const isLikely = contact.company && odooCompanyName &&
                     (odooCompanyName.toLowerCase().includes(contact.company.toLowerCase()) ||
                         contact.company.toLowerCase().includes(odooCompanyName.toLowerCase()));
-                
-                return { 
-                    partner: p, 
-                    status: isLikely ? 'likely' : 'potential' 
-                };
+                return { partner: p, status: isLikely ? 'likely' : 'potential' };
             });
-
-            // Sort matches so that 'likely' ones appear first
             matches.sort((a, b) => (a.status === 'likely' ? -1 : 1));
-
             return { status: 'multi', matches: matches };
         }
-
         return { status: 'none' };
     }
 
-    async findPartnerByProfile(profileUrl) {
-        const partners = await this.call('res.partner', 'search_read', [
-            [[this.linkedInField, '=', profileUrl]],
-            ['id', 'name']
-        ]);
-        return partners.length > 0 ? partners[0] : null;
-    }
-
     async linkPartner(partnerId, profileUrl) {
+        await this.ensureInitialized();
         const vals = {};
         vals[this.linkedInField] = profileUrl;
         return await this.call('res.partner', 'write', [[partnerId], vals]);
     }
 
     async createPartner(contact) {
+        await this.ensureInitialized();
         const vals = {
             function: contact.position,
             comment: contact.company ? `Entreprise LinkedIn: ${contact.company}` : "",
