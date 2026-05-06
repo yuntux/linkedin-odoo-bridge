@@ -1,0 +1,84 @@
+:root {
+    --primary: #714B67; /* Odoo Purple */
+    --secondary: #0077B5; /* LinkedIn Blue */
+    --warning: #f39c12; /* Orange for Potential Match */
+    --success: #27ae60; /* Green for Likely Match */
+    --bg: #f8f9fa;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --text: #333;
+    --text-light: #666;
+    --border: #e0e0e0;
+    --radius: 12px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 16px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+h1 { font-size: 1.1rem; font-weight: 600; margin: 0; color: var(--primary); }
+h3 { font-size: 1rem; margin-bottom: 16px; }
+
+.view { transition: opacity 0.3s; }
+.hidden { display: none !important; }
+
+/* Filter Group */
+.filter-group { margin-bottom: 16px; }
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    cursor: pointer;
+}
+.checkbox-container input { width: auto; margin: 0; cursor: pointer; }
+
+/* Onboarding */
+.hint { font-size: 0.8rem; color: var(--text-light); margin-bottom: 20px; line-height: 1.4; }
+.divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #ccc; font-size: 0.7rem; }
+.divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #eee; }
+.divider:not(:empty)::before { margin-right: .5em; }
+.divider:not(:empty)::after { margin-left: .5em; }
+
+.text-link { background: none; border: none; color: var(--secondary); font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 10px 0; width: 100%; }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 0.8rem; font-weight: 500; margin-bottom: 6px; color: var(--text-light); }
+input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 0.9rem; }
+
+/* Buttons */
+.primary-btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer; }
+.icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+
+/* Status */
+#status-msg { font-size: 0.85rem; margin: 15px 0; text-align: center; color: var(--text-light); }
+#status-msg a { color: var(--secondary); font-weight: 500; }
+
+/* Cards */
+.contact-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; }
+.contact-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #eee; }
+.contact-info { flex: 1; min-width: 0; }
+.contact-name { font-weight: 600; font-size: 0.9rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-headline { font-size: 0.75rem; color: var(--text-light); margin: 2px 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.action-btn { font-size: 0.7rem; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); font-weight: 500; }
+.action-btn.add { background: var(--secondary); color: white; border: none; }
+.action-btn.exists { background: #f1f8e9; color: #33691e; border-color: #dcedc8; }
+.action-btn.potential { background: #fff3e0; color: #e65100; border-color: #ffe0b2; }
+.action-btn.potential.likely { border: 2px solid var(--warning); font-weight: 700; }
+
+.error-text { color: #c62828; font-size: 0.7rem; }
+.empty-state { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.85rem; }

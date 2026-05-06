@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo Connector</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 data-i18n="sidebarTitle">Odoo 18 Connector</h1>
+            <button id="settings-toggle" class="icon-btn hidden">⚙️</button>
+        </header>
+
+        <!-- Onboarding / Setup View -->
+        <section id="setup-view" class="view">
+            <h3 data-i18n="settingsTitle">Odoo Configuration</h3>
+            <p class="hint" data-i18n="sessionHint">Use your active browser session. No password required.</p>
+            <div class="form-group">
+                <label data-i18n="odooUrl">Odoo URL</label>
+                <input type="text" id="setup-url" placeholder="https://odoo.example.com">
+            </div>
+            <button id="setup-connect" class="primary-btn" data-i18n="syncSession">Connect</button>
+            
+            <div class="divider"><span>OR</span></div>
+            
+            <button id="show-manual" class="text-link">Manual Password Configuration</button>
+        </section>
+
+        <!-- Manual Password Config (Hidden by default) -->
+        <section id="manual-view" class="view hidden">
+            <h3 data-i18n="tabPassword">Password/API</h3>
+            <div class="form-group">
+                <label data-i18n="odooUrl">Odoo URL</label>
+                <input type="text" id="manual-url" placeholder="https://odoo.example.com">
+            </div>
+            <div class="form-group">
+                <label data-i18n="odooDb">Database</label>
+                <input type="text" id="manual-db" placeholder="my_database">
+            </div>
+            <div class="form-group">
+                <label data-i18n="odooUser">Username</label>
+                <input type="text" id="manual-user" placeholder="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label data-i18n="odooPass">API Key / Password</label>
+                <input type="password" id="manual-pass">
+            </div>
+            <button id="manual-save" class="primary-btn" data-i18n="saveSettings">Save</button>
+            <button id="back-to-setup" class="text-link">Back</button>
+        </section>
+
+        <!-- Main View (Scan Button & Results) -->
+        <section id="main-view" class="view hidden">
+            <div class="actions">
+                <div class="filter-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="hide-exists">
+                        <span data-i18n="hideExists">Hide contacts already in Odoo</span>
+                    </label>
+                </div>
+                <button id="scan-btn" class="primary-btn" data-i18n="scanBtn">Scan LinkedIn Page</button>
+            </div>
+            
+            <div id="status-msg"></div>
+
+            <div id="contacts-list" class="list-container">
+                <div class="empty-state" data-i18n="noContacts">No contacts found yet.</div>
+            </div>
+        </section>
+    </div>
+    <script src="sidepanel.js"></script>
+</body>
+</html>
