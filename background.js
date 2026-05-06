@@ -46,12 +46,7 @@ async function handleOdooCall(params) {
             case 'check_contact':
                 return await api.findPartnerByProfile(data.profileUrl);
             case 'add_contact':
-                return await api.createPartner({
-                    name: data.name,
-                    website: data.profileUrl,
-                    function: data.headline,
-                    comment: `LinkedIn Sync: ${data.profileUrl}`
-                });
+                return await api.createPartner(data);
             default:
                 throw new Error("Unknown method");
         }

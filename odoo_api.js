@@ -124,31 +124,36 @@ class OdooAPI {
         return null;
     }
 
-    async findCompanyByName(name) {
-        if (!name) return null;
-        const companies = await this.call('res.partner', 'search_read', [
-            [['is_company', '=', true], ['name', 'ilike', name]],
-            ['id']
+    async findPartnerByProfile(profileUrl) {
+        const partners = await this.call('res.partner', 'search_read', [
+            [[this.linkedInField, '=', profileUrl]],
+            ['id', 'name']
         ]);
-        return companies.length > 0 ? companies[0].id : null;
+        return partners.length > 0 ? partners[0] : null;
     }
 
-    async updatePartnerLinkedIn(partnerId, profileUrl) {
-        const vals = {};
-        vals[this.linkedInField] = profileUrl;
-        return await this.call('res.partner', 'write', [[partnerId], vals]);
-    }
+    async createPartner(contact) {
+        // Check if 'first_name' field exists on the server
+        let hasFirstName = false;
+        try {
+            const fields = await this.call('res.partner', 'fields_get', [['first_name']]);
+            hasFirstName = !!(fields && fields.first_name);
+        } catch (e) { /* field doesn't exist */ }
 
-    async createContact(contact) {
-        const companyId = await this.findCompanyByName(contact.companyName);
         const vals = {
-            name: contact.name,
-            function: contact.jobTitle,
-            comment: contact.companyName ? `Entreprise LinkedIn: ${contact.companyName}\n${contact.headline}` : contact.headline,
+            function: contact.position,
+            comment: contact.company ? `Entreprise LinkedIn: ${contact.company}` : "",
             is_company: false
         };
         vals[this.linkedInField] = contact.profileUrl;
-        if (companyId) vals.parent_id = companyId;
+
+        if (hasFirstName && contact.firstName) {
+            vals.first_name = contact.firstName;
+            vals.name = contact.lastName || contact.firstName;
+        } else {
+            vals.name = contact.name;
+        }
+
         return await this.call('res.partner', 'create', [vals]);
     }
 }

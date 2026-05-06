@@ -74,8 +74,14 @@ function parseLinkedInConnections() {
             }
 
             if (name && name !== "LinkedIn Member") {
+                const nameParts = name.split(' ');
+                const firstName = nameParts[0];
+                const lastName = nameParts.slice(1).join(' ') || firstName;
+
                 contactsMap.set(cleanUrl, {
                     name,
+                    firstName,
+                    lastName,
                     position,
                     company,
                     profileUrl: cleanUrl,
