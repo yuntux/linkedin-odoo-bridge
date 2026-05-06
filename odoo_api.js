@@ -128,13 +128,23 @@ class OdooAPI {
         ]);
 
         if (potential.length > 0) {
-            const match = potential[0];
-            const odooCompanyName = match.parent_id ? match.parent_id[1] : "";
-            const isLikely = contact.company && odooCompanyName &&
-                (odooCompanyName.toLowerCase().includes(contact.company.toLowerCase()) ||
-                    contact.company.toLowerCase().includes(odooCompanyName.toLowerCase()));
+            // Process each match to see if it's 'likely' or just 'potential'
+            const matches = potential.map(p => {
+                const odooCompanyName = p.parent_id ? p.parent_id[1] : "";
+                const isLikely = contact.company && odooCompanyName &&
+                    (odooCompanyName.toLowerCase().includes(contact.company.toLowerCase()) ||
+                        contact.company.toLowerCase().includes(odooCompanyName.toLowerCase()));
+                
+                return { 
+                    partner: p, 
+                    status: isLikely ? 'likely' : 'potential' 
+                };
+            });
 
-            return { status: isLikely ? 'likely' : 'potential', partner: match };
+            // Sort matches so that 'likely' ones appear first
+            matches.sort((a, b) => (a.status === 'likely' ? -1 : 1));
+
+            return { status: 'multi', matches: matches };
         }
 
         return { status: 'none' };

@@ -70,14 +70,16 @@ input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border
 
 /* Match UI */
 .match-box { background: #fffde7; border: 1px solid #fff59d; border-radius: 8px; padding: 8px; margin-top: 5px; width: 100%; }
-.match-box.likely { background: #e3f2fd; border-color: #bbdefb; }
-.match-box.potential { background: #fff3e0; border-color: #ffe0b2; }
+.match-box.multi { padding: 4px; }
+.match-row { display: flex; justify-content: space-between; align-items: center; padding: 6px; border-bottom: 1px solid rgba(0,0,0,0.05); gap: 10px; }
+.match-row:last-child { border-bottom: none; }
+.match-row.likely { background: #e3f2fd; }
 
-.match-status { font-size: 0.7rem; font-weight: 600; margin: 0 0 5px 0; color: #555; }
-.match-actions { display: flex; gap: 5px; }
+.match-status { font-size: 0.65rem; font-weight: 600; margin: 0; color: #555; flex: 1; }
+.match-footer { padding: 6px; border-top: 1px dashed #ccc; margin-top: 4px; text-align: center; }
 
-.action-btn.link { background: #4caf50; color: white; border: none; flex: 1; font-size: 0.65rem; }
-.action-btn.add-anyway { background: white; color: #666; border: 1px solid #ccc; flex: 1; font-size: 0.65rem; }
+.action-btn.link.small { padding: 3px 6px; font-size: 0.6rem; min-width: 65px; }
+.action-btn.add-anyway { background: white; color: #666; border: 1px solid #ccc; width: 100%; font-size: 0.65rem; margin-top: 2px; }
 
 .error-text { color: #c62828; font-size: 0.7rem; }
 .empty-state { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.85rem; }

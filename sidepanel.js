@@ -227,22 +227,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                     container.innerHTML = '';
                     if (response && response.status === 'certain') {
                         container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("certainMatch")}</span>`;
-                    } else if (response && (response.status === 'likely' || response.status === 'potential')) {
-                        const statusClass = response.status;
-                        const partnerName = response.partner.name;
-                        const msgKey = response.status === 'likely' ? "likelyMatch" : "potentialMatch";
-                        
+                    } else if (response && response.status === 'multi') {
+                        let matchesHtml = '';
+                        response.matches.forEach((m, idx) => {
+                            const partnerName = m.partner.name;
+                            const companyName = m.partner.parent_id ? ` (${m.partner.parent_id[1]})` : "";
+                            const msgKey = m.status === 'likely' ? "likelyMatch" : "potentialMatch";
+                            const btnId = `link-${containerId}-${idx}`;
+                            
+                            matchesHtml += `
+                                <div class="match-row ${m.status}">
+                                    <p class="match-status">${chrome.i18n.getMessage(msgKey, [partnerName])}${companyName}</p>
+                                    <button class="action-btn link small" id="${btnId}">${chrome.i18n.getMessage("linkBtn")}</button>
+                                </div>
+                            `;
+                        });
+
                         container.innerHTML = `
-                            <div class="match-box ${statusClass}">
-                                <p class="match-status">${chrome.i18n.getMessage(msgKey, [partnerName])}</p>
-                                <div class="match-actions">
-                                    <button class="action-btn link" id="link-${containerId}">${chrome.i18n.getMessage("linkBtn")}</button>
+                            <div class="match-box multi">
+                                ${matchesHtml}
+                                <div class="match-footer">
                                     <button class="action-btn add-anyway" id="add-${containerId}">${chrome.i18n.getMessage("createAnywayBtn")}</button>
                                 </div>
                             </div>
                         `;
-                        
-                        document.getElementById(`link-${containerId}`).onclick = () => linkContactToOdoo(response.partner.id, contact.profileUrl, containerId);
+
+                        response.matches.forEach((m, idx) => {
+                            document.getElementById(`link-${containerId}-${idx}`).onclick = () => linkContactToOdoo(m.partner.id, contact.profileUrl, containerId);
+                        });
                         document.getElementById(`add-${containerId}`).onclick = () => addContactToOdoo(contact, containerId);
                     } else {
                         const addBtn = document.createElement('button');
