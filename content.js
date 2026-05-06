@@ -4,11 +4,40 @@
 
 console.log("LinkedIn Odoo Connector: Parser v1.4 (Deep Extraction)");
 
+// Global set to track already sent profiles to avoid duplicates in auto-scan
+let seenProfileUrls = new Set();
+let autoScanObserver = null;
+
+function startAutoScan() {
+    if (autoScanObserver) return;
+    
+    const targetNode = document.querySelector('.scaffold-layout__main') || document.body;
+    autoScanObserver = new MutationObserver((mutations) => {
+        const result = parseLinkedInConnections();
+        const newContacts = result.contacts.filter(c => !seenProfileUrls.has(c.profileUrl));
+        
+        if (newContacts.length > 0) {
+            newContacts.forEach(c => seenProfileUrls.add(c.profileUrl));
+            chrome.runtime.sendMessage({ 
+                action: "new_contacts_auto", 
+                contacts: newContacts 
+            });
+        }
+    });
+
+    autoScanObserver.observe(targetNode, { childList: true, subtree: true });
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "parse_connections") {
         try {
             const result = parseLinkedInConnections();
+            // Update seen set when manual scan is done
+            result.contacts.forEach(c => seenProfileUrls.add(c.profileUrl));
             sendResponse(result);
+            
+            // Start auto-scan if not already started
+            startAutoScan();
         } catch (error) {
             sendResponse({ error: error.message, contacts: [] });
         }

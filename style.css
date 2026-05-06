@@ -17,20 +17,24 @@ body {
     padding: 16px;
 }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-}
+/* Layout */
+.container { padding: 0; display: flex; flex-direction: column; height: 100vh; }
+header { padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: white; position: sticky; top: 0; z-index: 100; }
+h1 { font-size: 1rem; font-weight: 600; color: var(--primary); margin: 0; }
 
-h1 { font-size: 1.1rem; font-weight: 600; margin: 0; color: var(--primary); }
+.view { flex: 1; display: flex; flex-direction: column; overflow-y: auto; transition: opacity 0.3s; }
+.view.hidden { display: none; }
+
+/* Tabs */
+.tabs { display: flex; border-bottom: 1px solid #eee; background: #fafafa; }
+.tab-btn { flex: 1; padding: 12px; border: none; background: none; font-size: 0.8rem; font-weight: 500; color: #777; cursor: pointer; transition: 0.2s; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: var(--secondary); border-bottom-color: var(--secondary); background: white; }
+.tab-btn:hover:not(.active) { background: #f0f0f0; }
+
+.tab-content { padding: 15px; }
+.tab-content.hidden { display: none; }
+
 h3 { font-size: 1rem; margin-bottom: 16px; }
-
-.view { transition: opacity 0.3s; }
-.hidden { display: none !important; }
 
 /* Onboarding */
 .hint { font-size: 0.8rem; color: var(--text-light); margin-bottom: 20px; line-height: 1.4; }
@@ -98,9 +102,22 @@ input:checked + .slider { background-color: var(--secondary); }
 input:checked + .slider:before { transform: translateX(16px); }
 
 /* Hiding Logic */
+.hidden { display: none !important; }
 #contacts-list.hide-existing .contact-card.is-existing { display: none; }
 
-.error-text { color: #c62828; font-size: 0.7rem; }
+/* Debug Output */
+#debug-output { 
+    background: #212121; 
+    color: #a5d6a7; 
+    padding: 10px; 
+    font-size: 0.6rem; 
+    border-radius: 4px; 
+    margin: 10px; 
+    white-space: pre-wrap; 
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
 .empty-state { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.85rem; }
 
 /* Debug */
