@@ -79,10 +79,26 @@ input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border
 .match-status { font-size: 0.65rem; font-weight: 600; margin: 0; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .odoo-link { font-size: 0.6rem; color: var(--secondary); text-decoration: none; font-weight: 500; }
 .odoo-link:hover { text-decoration: underline; }
+.odoo-link.success-link { margin-top: 4px; display: inline-block; }
+
+.success-box { display: flex; flex-direction: column; align-items: flex-start; }
+
 .match-footer { padding: 6px; border-top: 1px dashed #ccc; margin-top: 4px; text-align: center; }
 
-.action-btn.link.small { padding: 3px 6px; font-size: 0.6rem; min-width: 65px; }
-.action-btn.add-anyway { background: white; color: #666; border: 1px solid #ccc; width: 100%; font-size: 0.65rem; margin-top: 2px; }
+/* Filters & Switch */
+.filters { padding: 5px 15px 15px 15px; }
+.filter-row { display: flex; justify-content: space-between; align-items: center; }
+.filter-label { font-size: 0.75rem; color: #555; font-weight: 500; }
+
+.switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--secondary); }
+input:checked + .slider:before { transform: translateX(16px); }
+
+/* Hiding Logic */
+#contacts-list.hide-existing .contact-card.is-existing { display: none; }
 
 .error-text { color: #c62828; font-size: 0.7rem; }
 .empty-state { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.85rem; }

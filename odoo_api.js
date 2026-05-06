@@ -152,7 +152,8 @@ class OdooAPI {
         await this.ensureInitialized();
         const vals = {};
         vals[this.linkedInField] = profileUrl;
-        return await this.call('res.partner', 'write', [[partnerId], vals]);
+        await this.call('res.partner', 'write', [[partnerId], vals]);
+        return partnerId;
     }
 
     async createPartner(contact) {

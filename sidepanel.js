@@ -222,6 +222,45 @@ document.addEventListener('DOMContentLoaded', async () => {
             await new Promise(r => setTimeout(r, 100));
         }
     }
+    const debugToggle = document.getElementById('debug-toggle');
+    const hideExistingToggle = document.getElementById('hide-existing-toggle');
+
+    // Persistence of hide existing toggle
+    chrome.storage.local.get(['hideExisting'], (res) => {
+        if (res.hideExisting) {
+            hideExistingToggle.checked = true;
+            document.getElementById('contacts-list').classList.add('hide-existing');
+        }
+    });
+
+    hideExistingToggle.addEventListener('change', (e) => {
+        chrome.storage.local.set({ hideExisting: e.target.checked });
+        const list = document.getElementById('contacts-list');
+        if (e.target.checked) {
+            list.classList.add('hide-existing');
+        } else {
+            list.classList.remove('hide-existing');
+        }
+    });
+
+    function renderSuccessWithLink(containerId, odooUrl, partnerId, msgKey) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        // Add class to parent card to allow hiding
+        const card = container.closest('.contact-card');
+        if (card && (msgKey === "certainMatch" || msgKey === "added")) {
+            card.classList.add('is-existing');
+        }
+
+        const partnerUrl = `${odooUrl}/web#id=${partnerId}&model=res.partner&view_type=form`;
+        container.innerHTML = `
+            <div class="success-box">
+                <span class="action-btn exists">${chrome.i18n.getMessage(msgKey)}</span>
+                <a href="${partnerUrl}" target="_blank" class="odoo-link success-link">Voir dans Odoo ↗</a>
+            </div>
+        `;
+    }
 
     function checkContact(contact, containerId, config) {
         return new Promise((resolve) => {
@@ -233,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (container) {
                     container.innerHTML = '';
                     if (response && response.status === 'certain') {
-                        container.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("certainMatch")}</span>`;
+                        renderSuccessWithLink(containerId, config.url, response.partner.id, "certainMatch");
                     } else if (response && response.status === 'multi') {
                         let matchesHtml = '';
                         const odooUrl = config.url;
@@ -290,10 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             action: "odoo_call",
             params: { config, method: "link_partner", data: { partnerId, profileUrl } }
         }, (response) => {
-            const currentContainer = document.getElementById(containerId);
-            if (currentContainer) {
-                currentContainer.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("added")}</span>`;
-            }
+            renderSuccessWithLink(containerId, config.url, partnerId, "added");
         });
     }
 
@@ -311,8 +347,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const currentContainer = document.getElementById(containerId);
             if (!currentContainer) return;
 
-            if (response && (response > 0 || response.id)) {
-                currentContainer.innerHTML = `<span class="action-btn exists">${chrome.i18n.getMessage("added")}</span>`;
+            const partnerId = (response && response.id) ? response.id : response;
+            if (partnerId && partnerId > 0) {
+                renderSuccessWithLink(containerId, config.url, partnerId, "added");
             } else {
                 currentContainer.innerHTML = `<span class="error-text">${chrome.i18n.getMessage("error")}</span>`;
             }

@@ -54,6 +54,15 @@
 
         <!-- Main View -->
         <section id="main-view" class="view hidden">
+            <div class="filters">
+                <div class="filter-row">
+                    <span class="filter-label" data-i18n="hideExists">Masquer les contacts déjà sur Odoo</span>
+                    <label class="switch">
+                        <input type="checkbox" id="hide-existing-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
             <div class="actions">
                 <button id="scan-btn" class="primary-btn" data-i18n="scanBtn">Scan LinkedIn Page</button>
             </div>
