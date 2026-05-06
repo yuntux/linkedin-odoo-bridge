@@ -21,7 +21,10 @@
     }
   },
   "background": {
-    "scripts": ["odoo_api.js", "background.js"]
+    "scripts": [
+      "odoo_api.js",
+      "background.js"
+    ]
   },
   "content_scripts": [
     {
@@ -29,15 +32,17 @@
         "https://www.linkedin.com/mynetwork/invite-connect/connections*",
         "https://www.linkedin.com/mynetwork/invite-connect/connections"
       ],
-      "js": ["content.js"]
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "action": {
-    "default_title": "Open Odoo Connector"
+    "default_title": "Open Linkedin Odoo Bridge"
   },
   "sidebar_action": {
     "default_panel": "sidepanel.html",
-    "default_title": "Odoo Connector"
+    "default_title": "Linkedin Odoo Bridge"
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -46,8 +51,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["style.css", "odoo_api.js"],
-      "matches": ["https://www.linkedin.com/*"]
+      "resources": [
+        "style.css",
+        "odoo_api.js"
+      ],
+      "matches": [
+        "https://www.linkedin.com/*"
+      ]
     }
   ]
 }

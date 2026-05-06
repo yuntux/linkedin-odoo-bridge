@@ -81,12 +81,18 @@ class OdooAPI {
             await this.initSession();
         }
 
+        // Ensure context is passed inside kwargs to avoid Odoo 18 warnings
+        const finalKwargs = Object.assign({}, kwargs);
+        if (!finalKwargs.context) {
+            finalKwargs.context = { "lang": "fr_FR" };
+        }
+
         const payload = {
             jsonrpc: "2.0",
             method: "call",
             params: {
-                model, method, args, kwargs,
-                context: { "lang": "fr_FR" }
+                model, method, args, 
+                kwargs: finalKwargs
             },
             id: Math.floor(Math.random() * 1000)
         };

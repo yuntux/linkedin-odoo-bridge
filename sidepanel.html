@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Odoo Connector</title>
+    <title>Linked Odoo Bridge</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
-        <header>
-            <h1 data-i18n="sidebarTitle">Odoo 18 Connector</h1>
-            <button id="settings-toggle" class="icon-btn">⚙️</button>
-        </header>
-
         <!-- Settings View (Tabs) -->
         <section id="settings-view" class="view">
             <div class="tabs">
@@ -27,7 +24,8 @@
                     <label data-i18n="odooUrl">Odoo URL</label>
                     <input type="text" id="session-url" placeholder="https://odoo.example.com">
                 </div>
-                <button id="sync-session" class="primary-btn" data-i18n="syncSession">Synchroniser avec le navigateur</button>
+                <button id="sync-session" class="primary-btn" data-i18n="syncSession">Synchroniser avec le
+                    navigateur</button>
             </div>
 
             <div id="password-tab" class="tab-content hidden">
@@ -49,6 +47,10 @@
                 </div>
                 <button id="save-settings" class="primary-btn" data-i18n="saveSettings">Save Settings</button>
             </div>
+
+            <div class="settings-footer">
+                <button id="back-to-main" class="text-link hidden">← Retour au Scan</button>
+            </div>
         </section>
 
         <!-- Main View -->
@@ -65,7 +67,7 @@
             <div class="actions">
                 <button id="scan-btn" class="primary-btn" data-i18n="scanBtn">Scan LinkedIn Page</button>
             </div>
-            
+
             <div id="status-msg"></div>
 
             <div id="contacts-list" class="list-container">
@@ -73,11 +75,15 @@
             </div>
 
             <div class="debug-section">
-                <button id="toggle-debug" class="text-link" data-i18n="showDebug">Show Raw JSON Debug</button>
+                <div class="debug-controls">
+                    <button id="settings-toggle" class="icon-btn-small">⚙️</button>
+                    <button id="toggle-debug" class="text-link" data-i18n="showDebug">Show Raw JSON Debug</button>
+                </div>
                 <pre id="debug-output" class="hidden"></pre>
             </div>
         </section>
     </div>
     <script src="sidepanel.js"></script>
 </body>
+
 </html>
