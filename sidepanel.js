@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveSettingsBtn = document.getElementById('save-settings');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
-    
+
     let renderedProfileUrls = new Set();
     let contactQueue = [];
     let isProcessingQueue = false;
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (backToMainBtn) {
         backToMainBtn.addEventListener('click', () => {
-            loadSettings(); 
+            loadSettings();
         });
     }
 
@@ -59,13 +59,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("Veuillez saisir une URL Odoo");
             return;
         }
-        
+
         syncSessionBtn.disabled = true;
         syncSessionBtn.innerText = chrome.i18n.getMessage("adding") || "Connexion...";
 
-        chrome.runtime.sendMessage({ 
-            action: "odoo_call", 
-            params: { config: { url }, method: "init_session" } 
+        chrome.runtime.sendMessage({
+            action: "odoo_call",
+            params: { config: { url }, method: "init_session" }
         }, async (response) => {
             if (response && response.uid) {
                 await chrome.storage.local.set({ url, db: response.db, username: "", password: "" });
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             username: document.getElementById('manual-user').value.trim(),
             password: document.getElementById('manual-pass').value.trim()
         };
-        
+
         if (!config.url || !config.db || !config.username || !config.password) {
             alert("Veuillez remplir tous les champs");
             return;
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         scanBtn.disabled = true;
         scanBtn.style.opacity = '0.5';
         statusMsg.innerText = chrome.i18n.getMessage("scanning");
-        
+
         contactsList.innerHTML = '';
         renderedProfileUrls.clear();
         contactQueue = [];
@@ -152,16 +152,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (isProcessingQueue || contactQueue.length === 0) return;
         isProcessingQueue = true;
         const config = await chrome.storage.local.get(['url', 'db', 'username', 'password']);
-        
+
         while (contactQueue.length > 0) {
             const item = contactQueue.shift();
             try {
                 await checkContact(item.contact, item.cardId, config);
-                await new Promise(r => setTimeout(r, 400)); // Slightly faster but still safe
+                await new Promise(r => setTimeout(r, 200)); // Slightly faster but still safe
             } catch (e) {
                 console.error("Queue Error:", e);
             }
-            
+
             // Auto-scroll ONLY if this item came from an auto-scan
             if (item.autoScroll) {
                 mainView.scrollTo({ top: mainView.scrollHeight, behavior: 'smooth' });
@@ -216,17 +216,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             mainView.classList.remove('hidden');
             settingsView.classList.add('hidden');
             if (backToMainBtn) backToMainBtn.classList.add('hidden');
-            
+
             const sessionUrl = document.getElementById('session-url');
             const manualUrl = document.getElementById('manual-url');
             if (sessionUrl) sessionUrl.value = config.url;
             if (manualUrl) manualUrl.value = config.url;
-            
+
             const dbInput = document.getElementById('manual-db');
             const userInput = document.getElementById('manual-user');
             if (dbInput) dbInput.value = config.db || "";
             if (userInput) userInput.value = config.username || "";
-            
+
             // Auto-check session if no password
             if (!config.password) {
                 chrome.runtime.sendMessage({ action: "odoo_call", params: { config, method: "init_session" } });

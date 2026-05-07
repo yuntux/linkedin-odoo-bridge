@@ -1,58 +1,58 @@
 # LinkedIn to Odoo Connector
 
-Une extension de navigateur (Chrome/Firefox) permettant de synchroniser vos relations LinkedIn vers votre instance Odoo 18 en temps réel avec une gestion avancée des doublons et des noms.
+A browser extension (Chrome/Firefox) to synchronize your LinkedIn connections to your Odoo 18 instance in real-time, with advanced duplicate and name management.
 
-## 🚀 Fonctionnalités
+## 🚀 Features
 
-- **Auto-Scan en temps réel** : Les contacts LinkedIn s'ajoutent automatiquement à votre panneau latéral au fur et à mesure de votre défilement (scroll).
-- **Matching Intelligent** : Détection automatique des doublons via 3 niveaux (URL LinkedIn, Nom/Prénom + Entreprise, Homonymes).
-- **Lien Direct Odoo** : Accédez à la fiche contact Odoo en un clic pour vérification.
-- **Support Multi-Versions** : Compatible avec les configurations Odoo standards ou avec le module `partner_firstname`.
-- **Rendu Premium** : Interface fluide, moderne et localisée (FR/EN).
+- **Real-time Auto-Scan**: LinkedIn contacts are automatically added to your sidepanel as you scroll through the page.
+- **Smart Matching**: Automatic duplicate detection via 3 levels (LinkedIn URL, Name/Firstname + Company, Homonyms).
+- **Direct Odoo Link**: Access the Odoo contact form in one click for verification.
+- **Multi-Version Support**: Compatible with standard Odoo configurations or with the `partner_firstname` module.
+- **Premium Rendering**: Smooth, modern, and localized (EN/FR/DE/ES/IT/PT/ZH) interface.
 
-## 🛡 Sécurité & Furtivité (Important)
+## 🛡 Security & Stealth (Important)
 
-L'extension a été conçue pour être la plus discrète possible afin de protéger votre compte LinkedIn :
+The extension was designed to be as discreet as possible to protect your LinkedIn account:
 
-1. **Lecture Passive** : L'extension ne fait **aucun appel réseau vers LinkedIn**. Elle extrait les données localement depuis le code HTML de votre navigateur.
-2. **Aucune Automatisation** : Elle ne simule pas de clics et ne force pas le défilement. Elle réagit uniquement à vos actions naturelles.
+1. **Passive Reading**: The extension makes **no network calls to LinkedIn**. It extracts data locally from your browser's HTML code.
+2. **No Automation**: It does not simulate clicks and does not force scrolling. It only reacts to your natural actions.
 
-### 💡 Consignes d'utilisation
-- **Vitesse Humaine** : Ne faites pas défiler des centaines de contacts en quelques secondes.
-- **Sessions Naturelles** : Évitez de scanner l'intégralité de vos relations en une seule session.
+### 💡 Usage Guidelines
+- **Human Speed**: Do not scroll through hundreds of contacts in a few seconds.
+- **Natural Sessions**: Avoid scanning all your connections in a single session.
 
-## 🛠 Installation Technique
+## 🛠 Technical Installation
 
-### 1. Côté Odoo (Pré-requis)
-L'extension est flexible et s'adapte à votre installation :
-- **Champ LinkedIn** : Si un champ technique `linkedin_url` (Char) existe sur `res.partner`, l'extension l'utilisera par défaut. Sinon, elle utilisera le champ `website`.
-- **Gestion des Noms** : 
-    - Si le module `partner_firstname` est installé (présence du champ `first_name`), l'extension séparera automatiquement le Prénom et le Nom.
-    - Sinon, le nom complet est envoyé dans le champ `name`.
-- **Permissions** : L'utilisateur Odoo doit avoir les droits de lecture/écriture sur les contacts (`res.partner`).
+### 1. Odoo Side (Prerequisites)
+The extension is flexible and adapts to your setup:
+- **LinkedIn Field**: If a technical field `linkedin_url` (Char) exists on `res.partner`, the extension will use it by default. Otherwise, it will use the `website` field.
+- **Name Management**: 
+    - If the `partner_firstname` module is installed (presence of the `first_name` field), the extension will automatically separate the First Name and Last Name.
+    - Otherwise, the full name is sent to the `name` field.
+- **Permissions**: The Odoo user must have read/write rights on contacts (`res.partner`).
 
-### 2. Côté Navigateur
-1. Accédez à la page des extensions :
-   - Chrome : `chrome://extensions`
-   - Firefox : `about:debugging`
-2. Activez le **Mode Développeur**.
-3. Cliquez sur **Charger l'extension non empaquetée** (Chrome) ou **Charger un module temporaire** (Firefox).
-4. Sélectionnez le dossier `linkedin-odoo-bridge`.
+### 2. Browser Side
+1. Go to the extensions page:
+   - Chrome: `chrome://extensions`
+   - Firefox: `about:debugging`
+2. Enable **Developer Mode**.
+3. Click on **Load unpacked** (Chrome) or **Load temporary Add-on** (Firefox).
+4. Select the `linkedin-odoo-bridge` folder.
 
-## ⚙️ Configuration de l'extension
+## ⚙️ Extension Configuration
 
-Lors de la première utilisation, renseignez :
-- **URL Odoo** : L'adresse complète (ex: `https://mon-odoo.com`).
-- **Base de données** : Le nom technique de la DB.
-- **Authentification** :
-    - **Session** : Utilisez votre session active (si vous êtes déjà connecté à Odoo sur le même navigateur).
-    - **Mot de passe** : Utilisez votre login et un **Mot de passe d'application / Clé API**.
+During the first use, provide:
+- **Odoo URL**: The full address (e.g., `https://my-odoo.com`).
+- **Database**: The technical name of the DB.
+- **Authentication**:
+    - **Session**: Use your active session (if you are already logged into Odoo in the same browser).
+    - **Password**: Use your login and an **App Password / API Key**.
 
-## 🧩 Structure du Projet
-- `content.js` : Parser LinkedIn & Auto-scan.
-- `sidepanel.js` : Logique d'interface et orchestration.
-- `odoo_api.js` : Wrapper de communication JSON-RPC avec Odoo.
-- `background.js` : Proxy pour les appels Odoo et la récupération d'images.
+## 🧩 Project Structure
+- `content.js`: LinkedIn parser & Auto-scan.
+- `sidepanel.js`: UI logic and orchestration.
+- `odoo_api.js`: JSON-RPC communication wrapper for Odoo.
+- `background.js`: Proxy for Odoo calls and image retrieval.
 
 ---
-*Développé pour Odoo 18.0 Community & Enterprise.*
+*Developed for Odoo 18.0 Community & Enterprise.*
